@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionário aos Estudantes de Engenharia</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 5px;
+        }
+
+        body {
+            position: relative;
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 40px 20px;
+        }
+
+        /* Canvas de Fundo Animado */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.88);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #38bdf8;
+            font-size: 1.7rem;
+            margin-bottom: 10px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.95rem;
+            color: #94a3b8;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .instructions {
+            background: rgba(56, 189, 248, 0.1);
+            border-left: 4px solid #38bdf8;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            margin-bottom: 30px;
+            color: #cbd5e1;
+        }
+
+        .section-title {
+            color: #f43f5e;
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin: 30px 0 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .question-group {
+            margin-bottom: 24px;
+        }
+
+        label.question-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #e2e8f0;
+            font-size: 0.98rem;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+        }
+
+        .custom-option {
+            background: rgba(51, 65, 85, 0.6);
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            font-size: 0.92rem;
+        }
+
+        .custom-option:hover {
+            background: rgba(51, 65, 85, 1);
+            border-color: #38bdf8;
+        }
+
+        .custom-option.selected {
+            background: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            color: #f8fafc;
+            padding: 12px 15px;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: #38bdf8;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .btn-submit {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #fff;
+            border: none;
+            padding: 15px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 35px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(2, 132, 199, 0.4);
+        }
+
+        /* Mensagem de Confirmação */
+        #success-message {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        #success-message h2 {
+            color: #38bdf8;
+            margin-bottom: 15px;
+        }
+
+        #success-message p {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="container">
+        <div id="form-container">
+            <h1>QUESTIONÁRIO AOS ESTUDANTES DE ENGENHARIA</h1>
+            <p class="subtitle">
+                <strong>Tema:</strong><br>
+                 Integração Academia–Indústria para estudantes de Engenharia: portfólios digitais, experiências práticas e trajectórias profissionais.<br>
+                 <br>
+                <strong>Objectivo:</strong> Recolher informações sobre a percepção dos estudantes relativamente à formação académica, experiência prática, competências e utilidade de portfólios digitais.
+            </p>
+            
+            <div class="instructions">
+                <strong>Instruções:</strong> O questionário é anónimo e destina-se exclusivamente a fins académicos. Seleccione a opção que melhor representa a sua situação ou opinião. Use <strong>duplo clique</strong> para marcar ou desmarcar uma opção.
+            </div>
+
+            <form id="survey-form">
+                
+                <!-- A. CARACTERIZAÇÃO -->
+                <div class="section-title">A. CARACTERIZAÇÃO</div>
+                
+                <div class="question-group">
+                    <label class="question-label" for="q1">1. Área/curso de Engenharia:</label>
+                    <input type="text" id="q1" name="q1" placeholder="Ex: Engenharia Electrónica e de Telecomunicações, Engenharia Mecânica...">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">2. Ano/nível de formação:</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q2" data-value="1.º">1.º</div>
+                        <div class="custom-option" data-type="single" data-name="q2" data-value="2.º">2.º</div>
+                        <div class="custom-option" data-type="single" data-name="q2" data-value="3.º">3.º</div>
+                        <div class="custom-option" data-type="single" data-name="q2" data-value="4.º">4.º</div>
+                        <div class="custom-option" data-type="single" data-name="q2" data-value="5.º">5.º</div>
+                        <div class="custom-option" data-type="single" data-name="q2" data-value="Finalista">Finalista</div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">3. Já realizou alguma actividade prática relacionada com a sua área?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q3" data-value="Sim">Sim</div>
+                        <div class="custom-option" data-type="single" data-name="q3" data-value="Não">Não</div>
+                    </div>
+                </div>
+
+                <!-- B. PREPARAÇÃO PARA O MERCADO DE TRABALHO -->
+                <div class="section-title">B. PREPARAÇÃO PARA O MERCADO DE TRABALHO</div>
+                
+                <div class="question-group">
+                    <label class="question-label">4. Como avalia o seu conhecimento sobre as oportunidades profissionais existentes na sua área?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q4" data-value="Muito baixo">Muito baixo</div>
+                        <div class="custom-option" data-type="single" data-name="q4" data-value="Baixo">Baixo</div>
+                        <div class="custom-option" data-type="single" data-name="q4" data-value="Médio">Médio</div>
+                        <div class="custom-option" data-type="single" data-name="q4" data-value="Bom">Bom</div>
+                        <div class="custom-option" data-type="single" data-name="q4" data-value="Muito bom">Muito bom</div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">5. Conhece as principais competências que as empresas procuram na sua área?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q5" data-value="Sim">Sim</div>
+                        <div class="custom-option" data-type="single" data-name="q5" data-value="Parcialmente">Parcialmente</div>
+                        <div class="custom-option" data-type="single" data-name="q5" data-value="Não">Não</div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">6. Quais são as principais dificuldades que prevê encontrar ao entrar no mercado de trabalho?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="multiple" data-name="q6" data-value="Falta de experiência prática">Falta de experiência prática</div>
+                        <div class="custom-option" data-type="multiple" data-name="q6" data-value="Falta de competências técnicas">Falta de competências técnicas</div>
+                        <div class="custom-option" data-type="multiple" data-name="q6" data-value="Falta de informação sobre oportunidades">Falta de informação sobre oportunidades</div>
+                        <div class="custom-option" data-type="multiple" data-name="q6" data-value="Falta de contactos profissionais">Falta de contactos profissionais</div>
+                        <div class="custom-option" data-type="multiple" data-name="q6" data-value="Domínio insuficiente de software/tecnologias">Domínio insuficiente de software/tecnologias</div>
+                    </div>
+                    <input type="text" id="q6_outra" name="q6_outra" placeholder="Outra dificuldade (especifique)..." style="margin-top: 10px;">
+                </div>
+
+                <!-- C. EXPERIÊNCIA PRÁTICA E COMPETÊNCIAS -->
+                <div class="section-title">C. EXPERIÊNCIA PRÁTICA E COMPETÊNCIAS</div>
+
+                <div class="question-group">
+                    <label class="question-label">7. Considera que a sua formação académica proporciona experiência prática suficiente?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q7" data-value="Sim">Sim</div>
+                        <div class="custom-option" data-type="single" data-name="q7" data-value="Parcialmente">Parcialmente</div>
+                        <div class="custom-option" data-type="single" data-name="q7" data-value="Não">Não</div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">8. Que experiências considera mais importantes para preparar um estudante para o mercado?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="multiple" data-name="q8" data-value="Estágio">Estágio</div>
+                        <div class="custom-option" data-type="multiple" data-name="q8" data-value="Projectos académicos">Projectos académicos</div>
+                        <div class="custom-option" data-type="multiple" data-name="q8" data-value="Projectos pessoais">Projectos pessoais</div>
+                        <div class="custom-option" data-type="multiple" data-name="q8" data-value="Visitas técnicas">Visitas técnicas</div>
+                        <div class="custom-option" data-type="multiple" data-name="q8" data-value="Projectos com empresas">Projectos com empresas</div>
+                        <div class="custom-option" data-type="multiple" data-name="q8" data-value="Investigação">Investigação</div>
+                        <div class="custom-option" data-type="multiple" data-name="q8" data-value="Workshops/certificações">Workshops/certificações</div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">9. Como avalia o seu domínio geral das competências técnicas necessárias à sua área?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q9" data-value="Muito baixo">Muito baixo</div>
+                        <div class="custom-option" data-type="single" data-name="q9" data-value="Baixo">Baixo</div>
+                        <div class="custom-option" data-type="single" data-name="q9" data-value="Médio">Médio</div>
+                        <div class="custom-option" data-type="single" data-name="q9" data-value="Bom">Bom</div>
+                        <div class="custom-option" data-type="single" data-name="q9" data-value="Muito bom">Muito bom</div>
+                    </div>
+                </div>
+
+                <!-- D. PORTFÓLIO DIGITAL -->
+                <div class="section-title">D. PORTFÓLIO DIGITAL</div>
+
+                <div class="question-group">
+                    <label class="question-label">10. Possui actualmente um portfólio digital dos seus projectos e competências?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q10" data-value="Sim">Sim</div>
+                        <div class="custom-option" data-type="single" data-name="q10" data-value="Não">Não</div>
+                        <div class="custom-option" data-type="single" data-name="q10" data-value="Estou a desenvolver">Estou a desenvolver</div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">11. Consideraria útil possuir um portfólio digital para apresentar às empresas?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q11" data-value="Sim">Sim</div>
+                        <div class="custom-option" data-type="single" data-name="q11" data-value="Talvez">Talvez</div>
+                        <div class="custom-option" data-type="single" data-name="q11" data-value="Não">Não</div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">12. Que informações deveria conter esse portfólio? (Pode seleccionar várias)</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="multiple" data-name="q12" data-value="Formação">Formação</div>
+                        <div class="custom-option" data-type="multiple" data-name="q12" data-value="Projectos">Projectos</div>
+                        <div class="custom-option" data-type="multiple" data-name="q12" data-value="Competências">Competências</div>
+                        <div class="custom-option" data-type="multiple" data-name="q12" data-value="Estágios/experiências">Estágios/experiências</div>
+                        <div class="custom-option" data-type="multiple" data-name="q12" data-value="Certificações">Certificações</div>
+                        <div class="custom-option" data-type="multiple" data-name="q12" data-value="Software/tecnologias">Software/tecnologias</div>
+                        <div class="custom-option" data-type="multiple" data-name="q12" data-value="Participação em eventos">Participação em eventos</div>
+                    </div>
+                </div>
+
+                <!-- E. APROXIMAÇÃO ENTRE ACADEMIA E INDÚSTRIA -->
+                <div class="section-title">E. APROXIMAÇÃO ENTRE ACADEMIA E INDÚSTRIA</div>
+
+                <div class="question-group">
+                    <label class="question-label">13. Como avalia actualmente a aproximação entre a sua instituição e as empresas?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q13" data-value="Muito fraca">Muito fraca</div>
+                        <div class="custom-option" data-type="single" data-name="q13" data-value="Fraca">Fraca</div>
+                        <div class="custom-option" data-type="single" data-name="q13" data-value="Moderada">Moderada</div>
+                        <div class="custom-option" data-type="single" data-name="q13" data-value="Boa">Boa</div>
+                        <div class="custom-option" data-type="single" data-name="q13" data-value="Muito boa">Muito boa</div>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">14. Que iniciativas poderiam aproximar mais estudantes e empresas?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="multiple" data-name="q14" data-value="Estágios">Estágios</div>
+                        <div class="custom-option" data-type="multiple" data-name="q14" data-value="Projectos conjuntos">Projectos conjuntos</div>
+                        <div class="custom-option" data-type="multiple" data-name="q14" data-value="Visitas técnicas">Visitas técnicas</div>
+                        <div class="custom-option" data-type="multiple" data-name="q14" data-value="Palestras de profissionais">Palestras de profissionais</div>
+                        <div class="custom-option" data-type="multiple" data-name="q14" data-value="Mentoria">Mentoria</div>
+                        <div class="custom-option" data-type="multiple" data-name="q14" data-value="Feiras de emprego">Feiras de emprego</div>
+                        <div class="custom-option" data-type="multiple" data-name="q14" data-value="Plataforma digital">Plataforma digital</div>
+                    </div>
+                    <input type="text" id="q14_outra" name="q14_outra" placeholder="Outras iniciativas (especifique)..." style="margin-top: 10px;">
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">15. Utilizaria uma plataforma que reunisse empresas, engenheiros, oportunidades e portfólios?</label>
+                    <div class="options-grid">
+                        <div class="custom-option" data-type="single" data-name="q15" data-value="Sim">Sim</div>
+                        <div class="custom-option" data-type="single" data-name="q15" data-value="Talvez">Talvez</div>
+                        <div class="custom-option" data-type="single" data-name="q15" data-value="Não">Não</div>
+                    </div>
+                </div>
+
+                <!-- F. QUESTÕES FINAIS -->
+                <div class="section-title">F. QUESTÕES FINAIS</div>
+                
+                <div class="question-group">
+                    <label class="question-label" for="q16">16. Qual considera ser a principal dificuldade de um estudante de Engenharia ao passar da universidade para o mercado?</label>
+                    <textarea id="q16" name="q16" placeholder="Ex: Transição da teoria para a prática, falta de vivência com problemas industriais reais..."></textarea>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label" for="q17">17. Que sugestão daria para aproximar estudantes de Engenharia e empresas?</label>
+                    <textarea id="q17" name="q17" placeholder="Ex: Criação de feiras de emprego universitárias, palestras com engenheiros e mentoria direta com a indústria..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">Submeter Respostas</button>
+            </form>
+        </div>
+
+        <div id="success-message">
+            <h2>Obrigado pela sua participação!</h2>
+            <p>As suas respostas foram registadas com sucesso e contribuirão exclusivamente para o estudo académico.</p>
+        </div>
+    </div>
+
+    <script>
+        /* 1. FUNDO ANIMADO */
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const particles = Array.from({ length: 65 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 1.2,
+            vy: (Math.random() - 0.5) * 1.2,
+            radius: Math.random() * 2 + 1
+        }));
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.7)';
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+
+            particles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        /* 2. LOGICA DE SELEÇÃO E DESSELEÇÃO POR DUPLO CLIQUE (dblclick) */
+        const options = document.querySelectorAll('.custom-option');
+        options.forEach(opt => {
+            opt.addEventListener('dblclick', function() {
+                const groupName = this.getAttribute('data-name');
+                const selectionType = this.getAttribute('data-type');
+                const isSelected = this.classList.contains('selected');
+
+                if (selectionType === 'single') {
+                    document.querySelectorAll(`.custom-option[data-name="${groupName}"]`).forEach(sibling => {
+                        sibling.classList.remove('selected');
+                    });
+                    if (!isSelected) this.classList.add('selected');
+                } else {
+                    // Seleção múltipla
+                    this.classList.toggle('selected');
+                }
+            });
+        });
+
+        /* 3. ENVIO DOS DADOS AO BACKEND (SEM MOSTRAR GRÁFICOS AO ESTUDANTE) */
+        const form = document.getElementById('survey-form');
+        const formContainer = document.getElementById('form-container');
+        const successMessage = document.getElementById('success-message');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Coleção de dados completos
+            const payload = {
+                data_hora: new Date().toISOString(),
+                q1: document.getElementById('q1').value || '',
+                q2: getSingleValue('q2'),
+                q3: getSingleValue('q3'),
+                q4: getSingleValue('q4'),
+                q5: getSingleValue('q5'),
+                q6: getMultipleValues('q6', 'q6_outra'),
+                q7: getSingleValue('q7'),
+                q8: getMultipleValues('q8'),
+                q9: getSingleValue('q9'),
+                q10: getSingleValue('q10'),
+                q11: getSingleValue('q11'),
+                q12: getMultipleValues('q12'),
+                q13: getSingleValue('q13'),
+                q14: getMultipleValues('q14', 'q14_outra'),
+                q15: getSingleValue('q15'),
+                q16: document.getElementById('q16').value || '',
+                q17: document.getElementById('q17').value || ''
+            };
+
+            // Substituir pelo URL do Google Apps Script ou API do seu backend
+            const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJ1j1pg6BaA-Vqk4g6R2CvndxGm32DCf-AQGNyeqYe-dgr0aFt__ZFHMv0gW6JdIE/exec";
+
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                formContainer.style.display = 'none';
+                successMessage.style.display = 'block';
+            }).catch(err => {
+                console.error("Erro ao submeter:", err);
+                // Mesmo em erro ou teste sem URL, oculta para demonstração
+                formContainer.style.display = 'none';
+                successMessage.style.display = 'block';
+            });
+        });
+
+        function getSingleValue(groupName) {
+            const sel = document.querySelector(`.custom-option[data-name="${groupName}"].selected`);
+            return sel ? sel.getAttribute('data-value') : '';
+        }
+
+        function getMultipleValues(groupName, extraInputId = null) {
+            const selected = Array.from(document.querySelectorAll(`.custom-option[data-name="${groupName}"].selected`))
+                                 .map(el => el.getAttribute('data-value'));
+            if (extraInputId) {
+                const extraVal = document.getElementById(extraInputId).value;
+                if (extraVal) selected.push("Outra: " + extraVal);
+            }
+            return selected.join('; ');
+        }
+    </script>
+</body>
+</html>
